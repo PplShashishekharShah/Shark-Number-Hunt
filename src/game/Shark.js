@@ -1,8 +1,7 @@
 /**
  * Shark.js
  * Single-texture (baby_shark.png) shark that grows from scale 0.22 → 0.75 max.
- * Physics circle is positioned near the mouth and stays fixed in world space.
- * Debug circle is redrawn each frame — no setScale() on Graphics (that was the bug).
+ * Physics circle is positioned to cover the whole face.
  */
 
 export default class Shark {
@@ -26,13 +25,9 @@ export default class Shark {
     this.sprite.body.setAllowGravity(false);
 
     // ── Physics Circle for Face/Mouth ─────────────────────────────
-    // Increased radius to 85 to cover the whole face area
+    // Large radius to cover the face area (per user request)
     this._baseRadius = 150; 
     this._setBodyCircle();
-
-    // ── Debug circle graphics (redrawn every frame at body.center) ──
-    this.debugGraphics = scene.add.graphics();
-    this.debugGraphics.setDepth(21);
 
     // ── Shadow ───────────────────────────────────────────────────
     this.shadow = scene.add.image(cx, cy, 'baby_shark');
@@ -66,7 +61,6 @@ export default class Shark {
     this.sprite.y += (ty - this.sprite.y) * 0.1;
 
     // ── Smooth scale lerp toward target ─────────────────────────
-    // This makes the growth feel like a gentle swell rather than a snap.
     const currentScale = this.sprite.scaleX;
     const smoothed = currentScale + (this._targetScale - currentScale) * 0.12;
     this.sprite.setScale(smoothed);
@@ -78,17 +72,6 @@ export default class Shark {
 
     // ── Recompute body circle each frame (face-pinned and scaled) ──────────
     this._setBodyCircle();
-
-    // ── Redraw debug circle at physics body.center ───────────────
-    // body.center is in world space. Radius must match scaled physics body.
-    const currentRadius = this._baseRadius * smoothed;
-    this.debugGraphics.clear();
-    this.debugGraphics.lineStyle(2, 0x00ff00, 0.25);
-    this.debugGraphics.strokeCircle(
-      this.sprite.body.center.x,
-      this.sprite.body.center.y,
-      currentRadius
-    );
   }
 
   eatCorrect() {
@@ -109,27 +92,24 @@ export default class Shark {
     const rawH = this.sprite.texture.getSourceImage().height;
     
     // Position center at 68% of width (face region)
-    // Offset is from top-left, so we subtract radius from the desired center.
     const offX = rawW * 0.68 - this._baseRadius;
     const offY = rawH * 0.50 - this._baseRadius;
     
-    // setCircle(radius, offsetX, offsetY)
-    // Phaser scales the radius and offsets by the sprite scale automatically for Arcade Physics.
     this.sprite.body.setCircle(this._baseRadius, offX, offY);
   }
 
-  /** Pop animation on eat */
+  /** Smoother pop animation on eat */
   _growPulse() {
     const s = this._targetScale;
     this.scene.tweens.add({
       targets: [this.sprite, this.shadow],
-      scaleX: s * 1.2,
-      scaleY: s * 1.2,
-      duration: 120,
+      scaleX: s * 1.1,
+      scaleY: s * 1.1,
+      duration: 150,
       yoyo: true,
-      ease: 'Back.easeOut',
+      ease: 'Sine.easeOut',
       onComplete: () => {
-        // Let the smooth lerp in update() handle settling back to targetScale
+        // Smooth lerp in update() handles the final settle
       },
     });
   }
@@ -158,7 +138,6 @@ export default class Shark {
   destroy() {
     this.particles?.destroy();
     this.shadow?.destroy();
-    this.debugGraphics?.destroy();
     this.sprite?.destroy();
   }
 }
