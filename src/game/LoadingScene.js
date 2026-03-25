@@ -44,6 +44,7 @@ export default class LoadingScene extends Phaser.Scene {
     this.load.audio('eat_sound',         'assets/eat.wav');
     this.load.audio('wrong_sound',       'assets/wrong.wav');
     this.load.audio('win_sound',         'assets/level_complete.wav');
+    this.load.audio('bg_music',          'assets/background_water_music.wav');
 
     // ── Title text ──────────────────────────────────────────────────
     this.add.text(W / 2, H * 0.12, '🦈 SHARK NUMBER HUNT', {

@@ -59,23 +59,20 @@ export default class GameScene extends Phaser.Scene {
     this._ground1 = this.add.image(0, H, 'land_with_sand')
       .setOrigin(0, 1)
       .setDepth(5);
-    this._ground1.setDisplaySize(W + 4, 300);
+    this._ground1.setDisplaySize(W * 1.2, 450);
 
     this._ground2 = this.add.image(W, H, 'land_with_sand')
       .setOrigin(0, 1)
       .setDepth(5);
-    this._ground2.setDisplaySize(W + 4, 300);
+    this._ground2.setDisplaySize(W * 1.2, 450);
 
-    // ── Level number badge (in-scene) ──────────────────────────
-    this._levelBadgeText = this.add.text(W / 2, 28, `LEVEL ${this._level}`, {
-      fontSize: '22px',
-      fontFamily: '"Segoe UI", Arial, sans-serif',
-      fontStyle: 'bold',
-      color: '#ffd700',
-      stroke: '#003366',
-      strokeThickness: 5,
-      shadow: { offsetX: 1, offsetY: 1, color: '#ff8800', blur: 6, fill: true },
-    }).setOrigin(0.5, 0).setDepth(25);
+    // ── Background Music ──────────────────────────────────────
+    if (!this.sound.get('bg_music')) {
+      const music = this.sound.add('bg_music', { volume: 0.3, loop: true });
+      music.play();
+    } else if (!this.sound.get('bg_music').isPlaying) {
+      this.sound.get('bg_music').play();
+    }
 
     // ── Fade-in camera ─────────────────────────────────────────
     this.cameras.main.fadeIn(400, 0, 10, 40);
@@ -141,11 +138,18 @@ export default class GameScene extends Phaser.Scene {
             this._triggerLevelComplete();
           }
         } else {
+          // Shark reacts but DOES NOT eat the wrong fish
           this._shark.eatWrong();
-          fish.destroy();
-          this._removeFish(fish);
-          this.sound.play('wrong_sound', { volume: 0.5 });
+          this.sound.play('wrong_sound', { volume: 0.4 });
           this.cameras.main.shake(100, 0.005);
+          
+          // Add a brief transparency effect to the fish to show it wasn't caught
+          this.tweens.add({
+            targets: fish.sprite,
+            alpha: 0.5,
+            duration: 100,
+            yoyo: true
+          });
         }
       }
     }

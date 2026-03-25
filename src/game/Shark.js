@@ -83,7 +83,17 @@ export default class Shark {
   }
 
   eatWrong() {
+    if (this._isTingingRed) return;
+    this._isTingingRed = true;
+    
+    // Tint red for 1 second
+    this.sprite.setTint(0xff0000);
     this._shake();
+    
+    this.scene.time.delayedCall(1000, () => {
+      this.sprite.clearTint();
+      this._isTingingRed = false;
+    });
   }
 
   /** Place physics circle to cover the whole face (~68% depth, vertically centered) */

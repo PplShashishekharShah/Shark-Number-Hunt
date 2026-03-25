@@ -45,6 +45,28 @@ export default function App() {
     setIsLoading(false);
   }, []);
 
+  const score       = gameState?.score    ?? 0;
+  const ruleLabel   = gameState?.ruleLabel ?? '';
+  const level       = gameState?.level    ?? levelData?.level ?? 1;
+  const totalLevels = gameState?.totalLevels ?? 4;
+  const theme       = LEVEL_THEMES[levelData?.level] ?? LEVEL_THEMES[1];
+
+  // ─── Voice Synthesis ──────────────────────────────────────────────
+  const speak = (text) => {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  useEffect(() => {
+    if (ruleLabel && !levelDone && !isLoading) {
+      speak(`New goal: ${ruleLabel}`);
+    }
+  }, [ruleLabel, levelDone, isLoading]);
+
   // ─── Custom star cursor ───────────────────────────────────────────────
   useEffect(() => {
     const move = (e) => setCursorPos({ x: e.clientX, y: e.clientY });
@@ -73,15 +95,14 @@ export default function App() {
     if (levelDone) return;
     const nextPause = !isPaused;
     setIsPaused(nextPause);
-    if (nextPause) GameCanvas.pause();
-    else           GameCanvas.resume();
+    if (nextPause) {
+      GameCanvas.pause();
+      speak("Game paused");
+    } else {
+      GameCanvas.resume();
+      speak("Game resumed");
+    }
   };
-
-  const score       = gameState?.score    ?? 0;
-  const ruleLabel   = gameState?.ruleLabel ?? '';
-  const level       = gameState?.level    ?? levelData?.level ?? 1;
-  const totalLevels = gameState?.totalLevels ?? 4;
-  const theme       = LEVEL_THEMES[levelData?.level] ?? LEVEL_THEMES[1];
 
   return (
     <>
@@ -113,9 +134,9 @@ export default function App() {
       {/* ── HUD Overlay ── */}
       {gameState && !levelDone && !isLoading && (
         <div className="game-ui">
-          <div className="game-header">
+          <div className="game-header centered-header">
             <h1>SHARK NUMBER HUNT</h1>
-            <div className="rule-badge">🎯 {ruleLabel}</div>
+            <div className="rule-badge highlight-heading">🎯 {ruleLabel}</div>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
