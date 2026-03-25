@@ -25,9 +25,9 @@ export default class Shark {
     this.sprite.setDepth(20);
     this.sprite.body.setAllowGravity(false);
 
-    // ── Physics Circle at MOUTH ───────────────────────────────────
-    // Radius 32px for slightly larger catch area
-    this._hitRadius = 38;
+    // ── Physics Circle for Face/Mouth ─────────────────────────────
+    // Increased radius to 85 to cover the whole face area
+    this._baseRadius = 150; 
     this._setBodyCircle();
 
     // ── Debug circle graphics (redrawn every frame at body.center) ──
@@ -76,18 +76,18 @@ export default class Shark {
     this.shadow.x = this.sprite.x - 14;
     this.shadow.y = this.sprite.y + 12;
 
-    // ── Recompute body circle each frame (mouth-pinned) ──────────
+    // ── Recompute body circle each frame (face-pinned and scaled) ──────────
     this._setBodyCircle();
 
     // ── Redraw debug circle at physics body.center ───────────────
-    // body.center is in world space — just stroke there directly.
-    // Do NOT setScale() on the Graphics — that detaches it visually.
+    // body.center is in world space. Radius must match scaled physics body.
+    const currentRadius = this._baseRadius * smoothed;
     this.debugGraphics.clear();
     this.debugGraphics.lineStyle(2, 0x00ff00, 0.25);
     this.debugGraphics.strokeCircle(
       this.sprite.body.center.x,
       this.sprite.body.center.y,
-      this._hitRadius
+      currentRadius
     );
   }
 
@@ -103,15 +103,19 @@ export default class Shark {
     this._shake();
   }
 
-  /** Place physics circle at the shark mouth (right side, vertically centred) */
+  /** Place physics circle to cover the whole face (~68% depth, vertically centered) */
   _setBodyCircle() {
-    const r = this._hitRadius;
     const rawW = this.sprite.texture.getSourceImage().width;
     const rawH = this.sprite.texture.getSourceImage().height;
-    // 72% from left = near mouth; 50% vertical = centre
-    const offX = rawW * 0.72 - r;
-    const offY = rawH * 0.50 - r;
-    this.sprite.body.setCircle(r, offX, offY);
+    
+    // Position center at 68% of width (face region)
+    // Offset is from top-left, so we subtract radius from the desired center.
+    const offX = rawW * 0.68 - this._baseRadius;
+    const offY = rawH * 0.50 - this._baseRadius;
+    
+    // setCircle(radius, offsetX, offsetY)
+    // Phaser scales the radius and offsets by the sprite scale automatically for Arcade Physics.
+    this.sprite.body.setCircle(this._baseRadius, offX, offY);
   }
 
   /** Pop animation on eat */
