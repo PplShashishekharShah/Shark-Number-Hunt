@@ -156,7 +156,7 @@ export default function App() {
           <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
             <div className="score-badge shadow-box">
               <div>Collected <span className="score-num">{score}</span> / {TARGET}</div>
-              <div style={{ fontSize: '14px', color: '#aac', marginTop: 2 }}>
+              <div style={{ fontSize: '12px', color: '#aac', marginTop: 1 }}>
                 Remaining: {TARGET - score}
               </div>
             </div>
