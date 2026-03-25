@@ -83,7 +83,7 @@ export default class Shark {
     // body.center is in world space — just stroke there directly.
     // Do NOT setScale() on the Graphics — that detaches it visually.
     this.debugGraphics.clear();
-    this.debugGraphics.lineStyle(2, 0x00ff00, 0.85);
+    this.debugGraphics.lineStyle(2, 0x00ff00, 0.25);
     this.debugGraphics.strokeCircle(
       this.sprite.body.center.x,
       this.sprite.body.center.y,

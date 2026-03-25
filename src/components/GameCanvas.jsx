@@ -2,19 +2,18 @@
  * GameCanvas.jsx
  * Mounts the Phaser 3 game instance inside a React component.
  * Bridges Phaser events → React state via game.events.
+ * Scenes: LoadingScene → GameScene (with level data)
  */
 
 import { useEffect, useRef, useCallback } from 'react';
 import Phaser from 'phaser';
-import GameScene from '../game/GameScene';
+import LoadingScene from '../game/LoadingScene';
+import GameScene   from '../game/GameScene';
 
-const TARGET_SCORE = 9;
-
-export default function GameCanvas({ onStateChange, onLevelComplete }) {
+export default function GameCanvas({ onStateChange, onLevelComplete, onLoadingComplete }) {
   const containerRef = useRef(null);
   const gameRef      = useRef(null);
 
-  // ─── Build Phaser Config ───────────────────────────────────────────────
   const createGame = useCallback(() => {
     if (gameRef.current) return;
 
@@ -28,19 +27,22 @@ export default function GameCanvas({ onStateChange, onLevelComplete }) {
         default: 'arcade',
         arcade:  { gravity: { y: 0 }, debug: false },
       },
-      scene: [GameScene],
+      scene: [LoadingScene, GameScene],
       scale: {
-        mode:            Phaser.Scale.RESIZE,
-        autoCenter:      Phaser.Scale.CENTER_BOTH,
-        width:           '100%',
-        height:          '100%',
+        mode:       Phaser.Scale.RESIZE,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        width:      '100%',
+        height:     '100%',
       },
     };
 
     const game = new Phaser.Game(config);
     gameRef.current = game;
 
-    // Listen for events from the scene
+    game.events.on('loadingComplete', () => {
+      onLoadingComplete?.();
+    });
+
     game.events.on('gameState', (data) => {
       onStateChange(data);
     });
@@ -50,9 +52,8 @@ export default function GameCanvas({ onStateChange, onLevelComplete }) {
     });
 
     return game;
-  }, [onStateChange, onLevelComplete]);
+  }, [onStateChange, onLevelComplete, onLoadingComplete]);
 
-  // ─── Mount / Unmount ───────────────────────────────────────────────────
   useEffect(() => {
     createGame();
     return () => {
@@ -61,28 +62,27 @@ export default function GameCanvas({ onStateChange, onLevelComplete }) {
         gameRef.current = null;
       }
     };
-  }, []); // only once
+  }, []);
 
-  // ─── Expose helpers ───────────────────────────────────────────────────
+  // ── Expose helpers ──────────────────────────────────────────────
   GameCanvas.restart = () => {
-    const game = gameRef.current;
-    if (!game) return;
-    const scene = game.scene.getScene('GameScene');
-    if (scene) scene.restartGame();
+    const scene = gameRef.current?.scene?.getScene('GameScene');
+    scene?.restartGame();
+  };
+
+  GameCanvas.nextLevel = () => {
+    const scene = gameRef.current?.scene?.getScene('GameScene');
+    scene?.goToNextLevel();
   };
 
   GameCanvas.pause = () => {
-    const game = gameRef.current;
-    if (!game) return;
-    const scene = game.scene.getScene('GameScene');
-    if (scene) scene.pauseGame();
+    const scene = gameRef.current?.scene?.getScene('GameScene');
+    scene?.pauseGame();
   };
 
   GameCanvas.resume = () => {
-    const game = gameRef.current;
-    if (!game) return;
-    const scene = game.scene.getScene('GameScene');
-    if (scene) scene.resumeGame();
+    const scene = gameRef.current?.scene?.getScene('GameScene');
+    scene?.resumeGame();
   };
 
   return (

@@ -20,11 +20,10 @@ export default class Fish {
 
     const spawnX = scene.scale.width + 80;
 
-    // Fish sprite
+    // Fish sprite – negative scaleX mirrors the image so it faces LEFT
     this.sprite = scene.physics.add.sprite(spawnX, spawnY, 'small_fish');
-    this.sprite.setScale(0.35);
+    this.sprite.setScale(-0.35, 0.35);   // negative X = flip horizontally
     this.sprite.setDepth(15);
-    this.sprite.setFlipX(true);  // Head faces left (mirrored)
     this.sprite.body.setAllowGravity(false);
     this.sprite.body.setVelocityX(-speed);
     this.sprite.body.setSize(
@@ -37,8 +36,7 @@ export default class Fish {
     this.shadow.setTint(0x000000);
     this.shadow.setAlpha(0.2);
     this.shadow.setDepth(14);
-    this.shadow.setScale(0.35);
-    this.shadow.setFlipX(true);
+    this.shadow.setScale(-0.35, 0.35);   // match fish mirror
 
     // Bubble backdrop for number
     this.bubble = scene.add.image(spawnX, spawnY - 55, 'bubble');

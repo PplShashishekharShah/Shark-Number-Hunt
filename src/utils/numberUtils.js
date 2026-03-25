@@ -23,11 +23,17 @@ export const isComposite = (n) => n > 1 && !isPrime(n);
 
 /** Rule checkers keyed by rule name */
 export const RULES = {
-  even:      { label: 'Collect Even Numbers',     check: isEven },
-  odd:       { label: 'Collect Odd Numbers',       check: isOdd },
   prime:     { label: 'Collect Prime Numbers',     check: isPrime },
-  composite: { label: 'Collect Composite Numbers', check: isComposite },
+  odd:       { label: 'Collect Odd Numbers',        check: isOdd },
+  even:      { label: 'Collect Even Numbers',       check: isEven },
+  composite: { label: 'Collect Composite Numbers',  check: isComposite },
 };
+
+/** Ordered level sequence: prime → odd → even → composite */
+export const LEVEL_ORDER = ['prime', 'odd', 'even', 'composite'];
+
+/** Return the rule key for a given 1-based level number */
+export const getLevelRule = (level) => LEVEL_ORDER[(level - 1) % LEVEL_ORDER.length];
 
 /** Return a random rule key from RULES */
 export const randomRule = () => {

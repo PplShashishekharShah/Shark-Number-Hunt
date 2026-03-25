@@ -1,13 +1,14 @@
 /**
  * GameScene.js
  * Main Phaser 3 Scene – handles game loop, spawning, collision, state.
+ * Receives { level } from LoadingScene via scene.start data.
  * Communicates with React via an EventEmitter attached to the game instance.
  */
 
 import Phaser from 'phaser';
 import Shark from './Shark';
 import Fish  from './Fish';
-import { randomRule, generateFishPool, RULES } from '../utils/numberUtils';
+import { generateFishPool, getLevelRule, RULES } from '../utils/numberUtils';
 
 /** How many correct fish to win the level */
 const TARGET_SCORE = 9;
@@ -17,6 +18,8 @@ const MAX_FISH = 4;
 const SPAWN_INTERVAL = 2200;
 /** Ground scroll speed */
 const GROUND_SPEED = 55;
+/** Total number of levels */
+const TOTAL_LEVELS = 4;
 
 export default class GameScene extends Phaser.Scene {
   constructor() {
@@ -27,23 +30,12 @@ export default class GameScene extends Phaser.Scene {
     this._fishPool = [];
     this._poolIdx  = 0;
     this._rule     = '';
+    this._level    = 1;
   }
 
-  // ─── PRELOAD ─────────────────────────────────────────────────────────────
-  preload() {
-    // Assets live in /assets/ relative to public root
-    this.load.image('background_water',    'assets/background_water.png');
-    this.load.image('land_with_sand',      'assets/sand_plant_land.png');
-    this.load.image('baby_shark',          'assets/baby_shark.png');
-    this.load.image('medium_shark',        'assets/medium_shark.png');
-    this.load.image('fully_grown_shark',   'assets/fully_grown_shark.png');
-    this.load.image('small_fish',          'assets/small_fish.png');
-    this.load.image('bubble',              'assets/bubble.png');
-
-    // ── Sounds ────────────────────────────────────────────────
-    this.load.audio('eat_sound',           'assets/eat.wav');
-    this.load.audio('wrong_sound',         'assets/wrong.wav');
-    this.load.audio('win_sound',           'assets/level_complete.wav');
+  // ─── INIT (receives data from scene.start) ────────────────────────────────
+  init(data) {
+    this._level = data?.level ?? 1;
   }
 
   // ─── CREATE ──────────────────────────────────────────────────────────────
@@ -51,7 +43,7 @@ export default class GameScene extends Phaser.Scene {
     const W = this.scale.width;
     const H = this.scale.height;
 
-    this._rule     = randomRule();
+    this._rule     = getLevelRule(this._level);
     this._fishPool = this._shufflePool(generateFishPool(this._rule));
     this._poolIdx  = 0;
     this._score    = 0;
@@ -63,9 +55,7 @@ export default class GameScene extends Phaser.Scene {
       .setDisplaySize(W, H)
       .setDepth(0);
 
-    // ── Scrolling ground strip (NEW APPROACH) ─────────────────
-    // Using two plain images side-by-side that we manually scroll.
-    // This guarantees the image always renders and never vanishes.
+    // ── Scrolling ground strip ─────────────────────────────────
     this._ground1 = this.add.image(0, H, 'land_with_sand')
       .setOrigin(0, 1)
       .setDepth(5);
@@ -75,6 +65,20 @@ export default class GameScene extends Phaser.Scene {
       .setOrigin(0, 1)
       .setDepth(5);
     this._ground2.setDisplaySize(W + 4, 300);
+
+    // ── Level number badge (in-scene) ──────────────────────────
+    this._levelBadgeText = this.add.text(W / 2, 28, `LEVEL ${this._level}`, {
+      fontSize: '22px',
+      fontFamily: '"Segoe UI", Arial, sans-serif',
+      fontStyle: 'bold',
+      color: '#ffd700',
+      stroke: '#003366',
+      strokeThickness: 5,
+      shadow: { offsetX: 1, offsetY: 1, color: '#ff8800', blur: 6, fill: true },
+    }).setOrigin(0.5, 0).setDepth(25);
+
+    // ── Fade-in camera ─────────────────────────────────────────
+    this.cameras.main.fadeIn(400, 0, 10, 40);
 
     // ── Shark ─────────────────────────────────────────────────
     this._shark = new Shark(this);
@@ -90,7 +94,7 @@ export default class GameScene extends Phaser.Scene {
     // ── Mouse input ────────────────────────────────────────────
     this.input.setPollAlways();
 
-    // ── Emit initial state to React ────────────────────────────
+    // ── Emit initial state ─────────────────────────────────────
     this._emitState();
   }
 
@@ -98,11 +102,10 @@ export default class GameScene extends Phaser.Scene {
   update(_time, _delta) {
     if (this._gameOver) return;
 
-    // Move shark toward pointer
     const pointer = this.input.activePointer;
     this._shark.update(pointer);
 
-    // Scroll ground (two images leapfrog left)
+    // Scroll ground
     const scrollSpeed = GROUND_SPEED * (_delta / 1000) * 2;
     const W = this.scale.width;
     this._ground1.x -= scrollSpeed;
@@ -112,21 +115,16 @@ export default class GameScene extends Phaser.Scene {
 
     // Update fish & check collisions
     const activeFishes = this._fishes.filter(f => f.active);
-    
     for (let i = activeFishes.length - 1; i >= 0; i--) {
       const fish = activeFishes[i];
       fish.update();
 
-      // Remove off-screen fish
       if (fish.isOffscreen()) {
         fish.destroy();
         this._removeFish(fish);
         continue;
       }
 
-      // ── PRECISION COLLISION DETECTION ───────────────────────
-      // We check if the shark's CIRCLE physics body overlaps the fish's sprite body.
-      // This is much more accurate than bounds-overlap which catches 'air' around images.
       if (this.physics.overlap(this._shark.sprite, fish.sprite)) {
         if (fish.correct) {
           this._shark.eatCorrect();
@@ -135,7 +133,6 @@ export default class GameScene extends Phaser.Scene {
           fish.eatEffect();
           this._removeFish(fish);
 
-          // SFX & Vibe
           this.sound.play('eat_sound', { volume: 0.6 });
           this.cameras.main.shake(150, 0.008);
 
@@ -147,7 +144,6 @@ export default class GameScene extends Phaser.Scene {
           this._shark.eatWrong();
           fish.destroy();
           this._removeFish(fish);
-          
           this.sound.play('wrong_sound', { volume: 0.5 });
           this.cameras.main.shake(100, 0.005);
         }
@@ -156,7 +152,7 @@ export default class GameScene extends Phaser.Scene {
   }
 
   // ─── PUBLIC API ──────────────────────────────────────────────────────────
-  
+
   pauseGame() {
     this.physics.world.pause();
     this._spawnTimer.paused = true;
@@ -167,11 +163,27 @@ export default class GameScene extends Phaser.Scene {
     this._spawnTimer.paused = false;
   }
 
+  restartGame() {
+    this._shark?.destroy();
+    this._fishes.forEach(f => f.destroy());
+    this._fishes = [];
+    this.scene.restart({ level: this._level });
+  }
+
+  goToNextLevel() {
+    this._shark?.destroy();
+    this._fishes.forEach(f => f.destroy());
+    this._fishes = [];
+    const nextLevel = this._level < TOTAL_LEVELS ? this._level + 1 : 1;
+    this.cameras.main.fadeOut(400, 0, 10, 40);
+    this.cameras.main.once('camerafadeoutcomplete', () => {
+      this.scene.restart({ level: nextLevel });
+    });
+  }
+
   _removeFish(fish) {
     const idx = this._fishes.indexOf(fish);
-    if (idx !== -1) {
-      this._fishes.splice(idx, 1);
-    }
+    if (idx !== -1) this._fishes.splice(idx, 1);
   }
 
   // ─── PRIVATE ─────────────────────────────────────────────────────────────
@@ -185,11 +197,9 @@ export default class GameScene extends Phaser.Scene {
     const maxY = H - 130;
     const spawnY = Phaser.Math.Between(minY, maxY);
 
-    // Cycle through pool
-    const data    = this._fishPool[this._poolIdx % this._fishPool.length];
+    const data = this._fishPool[this._poolIdx % this._fishPool.length];
     this._poolIdx++;
 
-    // Re-shuffle when we've gone through the whole pool
     if (this._poolIdx % this._fishPool.length === 0) {
       this._fishPool = this._shufflePool(this._fishPool);
     }
@@ -197,15 +207,6 @@ export default class GameScene extends Phaser.Scene {
     const speed = Phaser.Math.Between(150, 230);
     const fish  = new Fish(this, data.value, data.correct, spawnY, speed);
     this._fishes.push(fish);
-  }
-
-  _overlaps(a, b) {
-    return !(
-      a.right  <= b.left   ||
-      a.left   >= b.right  ||
-      a.bottom <= b.top    ||
-      a.top    >= b.bottom
-    );
   }
 
   _shufflePool(arr) {
@@ -220,13 +221,15 @@ export default class GameScene extends Phaser.Scene {
   _triggerLevelComplete() {
     this._gameOver = true;
     this._spawnTimer.remove();
-    // Destroy remaining fish
     this._fishes.forEach(f => f.destroy());
     this._fishes = [];
-    // Notify React
     this.game.events.emit('levelComplete', {
-      rule:  this._rule,
-      score: this._score,
+      rule:       this._rule,
+      ruleLabel:  RULES[this._rule]?.label || '',
+      score:      this._score,
+      level:      this._level,
+      totalLevels: TOTAL_LEVELS,
+      isLastLevel: this._level >= TOTAL_LEVELS,
     });
   }
 
@@ -236,14 +239,8 @@ export default class GameScene extends Phaser.Scene {
       ruleLabel: RULES[this._rule]?.label || '',
       score:     this._score,
       target:    TARGET_SCORE,
+      level:     this._level,
+      totalLevels: TOTAL_LEVELS,
     });
-  }
-
-  // ─── RESTART ─────────────────────────────────────────────────────────────
-  restartGame() {
-    this._shark?.destroy();
-    this._fishes.forEach(f => f.destroy());
-    this._fishes = [];
-    this.scene.restart();
   }
 }
