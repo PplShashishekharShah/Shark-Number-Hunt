@@ -31,20 +31,20 @@ export default class LoadingScene extends Phaser.Scene {
 
     // ── Baby shark image (already placed in public via HTML img preload) ─
     // We load it here as a Phaser texture for rendering on canvas
-    this.load.image('loading_shark', 'assets/baby_shark.png');
+    this.load.image('loading_shark', '/assets/baby_shark.png');
 
     // Load ALL game assets here (so GameScene doesn't re-load)
-    this.load.image('background_water',  'assets/background_water.png');
-    this.load.image('land_with_sand',    'assets/sand_plant_land.png');
-    this.load.image('baby_shark',        'assets/baby_shark.png');
-    this.load.image('medium_shark',      'assets/medium_shark.png');
-    this.load.image('fully_grown_shark', 'assets/fully_grown_shark.png');
-    this.load.image('small_fish',        'assets/small_fish.png');
-    this.load.image('bubble',            'assets/bubble.png');
-    this.load.audio('eat_sound',         'assets/eat.wav');
-    this.load.audio('wrong_sound',       'assets/wrong.wav');
-    this.load.audio('win_sound',         'assets/level_complete.wav');
-    this.load.audio('bg_music',          'assets/background_water_music.wav');
+    this.load.image('background_water',  '/assets/background_water.png');
+    this.load.image('land_with_sand',    '/assets/sand_plant_land.png');
+    this.load.image('baby_shark',        '/assets/baby_shark.png');
+    this.load.image('medium_shark',      '/assets/medium_shark.png');
+    this.load.image('fully_grown_shark', '/assets/fully_grown_shark.png');
+    this.load.image('small_fish',        '/assets/small_fish.png');
+    this.load.image('bubble',            '/assets/bubble.png');
+    this.load.audio('eat_sound',         '/assets/eat.wav');
+    this.load.audio('wrong_sound',       '/assets/wrong.wav');
+    this.load.audio('win_sound',         '/assets/level_complete.wav');
+    this.load.audio('bg_music',          '/assets/background_water_music.wav');
 
     // ── Title text ──────────────────────────────────────────────────
     this.add.text(W / 2, H * 0.12, '🦈 SHARK NUMBER HUNT', {

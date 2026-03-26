@@ -156,7 +156,7 @@ export default function App() {
       {screen === 'start' && (
         <div className="start-screen-overlay">
           <div className="start-card shadow-box">
-            <img src="assets/baby_shark.png" alt="Shark Logo" className="start-logo" />
+            <img src="/assets/baby_shark.png" alt="Shark Logo" className="start-logo" />
             <h1 className="start-title">SHARK NUMBER HUNT</h1>
             <p className="start-subtitle">Master the ocean of numbers!</p>
             <div className="start-buttons">
@@ -204,7 +204,7 @@ export default function App() {
         <div className="loading-overlay">
           <div className="loading-content">
             <img
-              src="assets/baby_shark.png"
+              src="/assets/baby_shark.png"
               alt="Baby Shark"
               className="loading-shark-img"
             />
