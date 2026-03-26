@@ -8,9 +8,16 @@
 import { useEffect, useRef, useCallback } from 'react';
 import Phaser from 'phaser';
 import LoadingScene from '../game/LoadingScene';
-import GameScene   from '../game/GameScene';
+import GameScene    from '../game/GameScene';
+import TutorialScene from '../game/TutorialScene';
 
-export default function GameCanvas({ onStateChange, onLevelComplete, onLoadingComplete }) {
+export default function GameCanvas({ 
+  onStateChange, 
+  onLevelComplete, 
+  onLoadingComplete, 
+  onTutorialStep, 
+  onTutorialComplete 
+}) {
   const containerRef = useRef(null);
   const gameRef      = useRef(null);
 
@@ -27,7 +34,7 @@ export default function GameCanvas({ onStateChange, onLevelComplete, onLoadingCo
         default: 'arcade',
         arcade:  { gravity: { y: 0 }, debug: false },
       },
-      scene: [LoadingScene, GameScene],
+      scene: [LoadingScene, GameScene, TutorialScene],
       scale: {
         mode:       Phaser.Scale.RESIZE,
         autoCenter: Phaser.Scale.CENTER_BOTH,
@@ -41,6 +48,18 @@ export default function GameCanvas({ onStateChange, onLevelComplete, onLoadingCo
 
     game.events.on('loadingComplete', () => {
       onLoadingComplete?.();
+    });
+
+    game.events.on('tutorialStep', (data) => {
+      onTutorialStep?.(data);
+    });
+
+    game.events.on('tutorialStepReady', (data) => {
+      onTutorialStepReady?.(data);
+    });
+
+    game.events.on('tutorialComplete', () => {
+      onTutorialComplete?.();
     });
 
     game.events.on('gameState', (data) => {
@@ -83,6 +102,27 @@ export default function GameCanvas({ onStateChange, onLevelComplete, onLoadingCo
   GameCanvas.resume = () => {
     const scene = gameRef.current?.scene?.getScene('GameScene');
     scene?.resumeGame();
+  };
+
+  GameCanvas.startTutorial = () => {
+    const game = gameRef.current;
+    if (game) {
+      game.scene.stop('GameScene');
+      game.scene.start('TutorialScene');
+    }
+  };
+
+  GameCanvas.nextTutorialStep = () => {
+    const scene = gameRef.current?.scene?.getScene('TutorialScene');
+    scene?.nextStep();
+  };
+
+  GameCanvas.startGame = () => {
+    const game = gameRef.current;
+    if (game) {
+      game.scene.stop('TutorialScene');
+      game.scene.start('GameScene', { level: 1 });
+    }
   };
 
   return (

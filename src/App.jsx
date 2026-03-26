@@ -29,6 +29,9 @@ export default function App() {
   const [isPaused,       setIsPaused]       = useState(false);
   const [cursorPos,      setCursorPos]      = useState({ x: -100, y: -100 });
   const [isLoading,      setIsLoading]      = useState(true);
+  const [screen,         setScreen]         = useState('loading'); // 'loading' | 'start' | 'tutorial' | 'game'
+  const [tutorialStep,   setTutorialStep]   = useState({ step: 0, text: '' });
+  const [autoNextTimer,  setAutoNextTimer]  = useState(null);
 
   // ─── Forward events from Phaser ──────────────────────────────────────
   const handleStateChange = useCallback((data) => {
@@ -43,7 +46,24 @@ export default function App() {
 
   const handleLoadingComplete = useCallback(() => {
     setIsLoading(false);
+    setScreen('start');
   }, []);
+
+  const handleTutorialStep = useCallback((data) => {
+    setTutorialStep(data); // data contains { step, text }
+    if (autoNextTimer) clearTimeout(autoNextTimer);
+  }, [autoNextTimer]);
+
+  const handleTutorialStepReady = useCallback((_data) => {
+    // We no longer use a fixed timer. 
+    // progression is handled by the speak() onEnd callback now.
+  }, []);
+
+  const handleTutorialComplete = useCallback(() => {
+    if (autoNextTimer) clearTimeout(autoNextTimer);
+    setScreen('game');
+    GameCanvas.startGame();
+  }, [autoNextTimer]);
 
   const score       = gameState?.score    ?? 0;
   const ruleLabel   = gameState?.ruleLabel ?? '';
@@ -52,20 +72,36 @@ export default function App() {
   const theme       = LEVEL_THEMES[levelData?.level] ?? LEVEL_THEMES[1];
 
   // ─── Voice Synthesis ──────────────────────────────────────────────
-  const speak = (text) => {
+  const speak = (text, onEnd) => {
     if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.rate = 1.0;
     utterance.pitch = 1.0;
+    if (onEnd) {
+      utterance.onend = onEnd;
+    }
     window.speechSynthesis.speak(utterance);
   };
 
   useEffect(() => {
-    if (ruleLabel && !levelDone && !isLoading) {
+    if (screen === 'tutorial' && tutorialStep.step > 0 && tutorialStep.text) {
+      // Speak the instruction, then move to next step when done
+      speak(tutorialStep.text, () => {
+        // Wait a small extra pause for visual breathing room
+        const timer = setTimeout(() => {
+          GameCanvas.nextTutorialStep();
+        }, 800);
+        setAutoNextTimer(timer);
+      });
+    }
+  }, [screen, tutorialStep, isLoading]);
+
+  useEffect(() => {
+    if (ruleLabel && screen === 'game' && !levelDone) {
       speak(`New goal: ${ruleLabel}`);
     }
-  }, [ruleLabel, levelDone, isLoading]);
+  }, [ruleLabel, screen, levelDone]);
 
   // ─── Custom star cursor ───────────────────────────────────────────────
   useEffect(() => {
@@ -111,7 +147,57 @@ export default function App() {
         onStateChange={handleStateChange}
         onLevelComplete={handleLevelComplete}
         onLoadingComplete={handleLoadingComplete}
+        onTutorialStep={handleTutorialStep}
+        onTutorialStepReady={handleTutorialStepReady}
+        onTutorialComplete={handleTutorialComplete}
       />
+
+      {/* ── Start Screen ── */}
+      {screen === 'start' && (
+        <div className="start-screen-overlay">
+          <div className="start-card shadow-box">
+            <img src="assets/baby_shark.png" alt="Shark Logo" className="start-logo" />
+            <h1 className="start-title">SHARK NUMBER HUNT</h1>
+            <p className="start-subtitle">Master the ocean of numbers!</p>
+            <div className="start-buttons">
+              <button className="start-btn primary" onClick={() => { setScreen('game'); GameCanvas.startGame(); speak("Starting game! Good luck!"); }}>
+                Start Game
+              </button>
+              <button className="start-btn secondary" onClick={() => { setScreen('tutorial'); GameCanvas.startTutorial(); setTutorialStep({ step: 1, text: '' }); }}>
+                How to Play
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Tutorial Overlay ── */}
+      {screen === 'tutorial' && (
+        <div className="tutorial-overlay-layout">
+          {/* Bubble at top center */}
+          <div className="tutorial-bubble-container">
+            <div className="tutorial-speech-bubble">
+              <p className="tutorial-text">{tutorialStep.text}</p>
+            </div>
+          </div>
+
+          {/* Buttons at bottom */}
+          <div className="tutorial-bottom-bar">
+            <button className="tutorial-btn skip" onClick={() => { if (autoNextTimer) clearTimeout(autoNextTimer); setScreen('game'); GameCanvas.startGame(); }}>
+              Skip Tutorial
+            </button>
+            {tutorialStep.step < 4 ? (
+              <button className="tutorial-btn next" onClick={() => { if (autoNextTimer) clearTimeout(autoNextTimer); GameCanvas.nextTutorialStep(); }}>
+                Next →
+              </button>
+            ) : (
+              <button className="tutorial-btn next" onClick={() => { if (autoNextTimer) clearTimeout(autoNextTimer); setScreen('game'); GameCanvas.startGame(); }}>
+                Start Now!
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ── Loading Screen ── */}
       {isLoading && (

@@ -142,9 +142,7 @@ export default class LoadingScene extends Phaser.Scene {
       this.game.events.emit('loadingComplete');
 
       this.cameras.main.fadeOut(500, 0, 10, 40);
-      this.cameras.main.once('camerafadeoutcomplete', () => {
-        this.scene.start('GameScene', { level: 1 });
-      });
+      // We don't start GameScene here anymore; React handles it via Start Screen buttons
     });
   }
 }

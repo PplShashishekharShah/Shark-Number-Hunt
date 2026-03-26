@@ -638,3 +638,168 @@ html, body, #root {
   from { transform: translateY(16px); opacity: 0; }
   to   { transform: translateY(0);    opacity: 1; }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   START SCREEN & TUTORIAL
+   ═══════════════════════════════════════════════════════════════ */
+.start-screen-overlay, .tutorial-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 5000;
+  background: rgba(0, 5, 15, 0.7);
+  backdrop-filter: blur(8px);
+}
+
+.start-card, .tutorial-card {
+  background: rgba(0, 20, 40, 0.85);
+  border: 3px solid rgba(0, 170, 255, 0.5);
+  border-radius: 32px;
+  padding: 40px;
+  text-align: center;
+  max-width: 500px;
+  width: 90%;
+  animation: cardIn 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: scale(0.8) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.start-logo {
+  width: 140px;
+  margin-bottom: 20px;
+  filter: drop-shadow(0 0 15px rgba(0, 170, 255, 0.4));
+  animation: logoFloat 3s ease-in-out infinite;
+}
+
+@keyframes logoFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.start-title {
+  font-size: 34px;
+  color: #fff;
+  margin: 0 0 10px;
+  text-shadow: 0 0 20px rgba(0, 170, 255, 0.6);
+}
+
+.start-subtitle {
+  color: #aaddff;
+  font-size: 18px;
+  margin-bottom: 30px;
+}
+
+.start-buttons, .tutorial-buttons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+.start-btn, .tutorial-btn {
+  padding: 14px 28px;
+  font-size: 18px;
+  font-weight: 700;
+  border-radius: 50px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.tutorial-btn {
+  animation: buttonFloat 2s ease-in-out infinite alternate;
+}
+
+@keyframes buttonFloat {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-8px); }
+}
+
+.start-btn.primary, .tutorial-btn.next {
+  background: linear-gradient(135deg, #00c8ff, #0066ff);
+  color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 20px rgba(0, 150, 255, 0.6);
+}
+
+.start-btn.secondary {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border: 2px solid rgba(255,255,255,0.2);
+}
+
+.tutorial-btn.skip {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.6);
+}
+
+.start-btn:hover, .tutorial-btn:hover {
+  transform: scale(1.1) translateY(-10px);
+  filter: brightness(1.2);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4), 0 0 30px rgba(255, 255, 255, 0.2);
+}
+
+/* Tutorial Refresh Housekeeping */
+.tutorial-overlay-layout {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 5000;
+  pointer-events: none;
+  padding: 40px 0;
+}
+
+.tutorial-bubble-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.tutorial-speech-bubble {
+  width: 750px;
+  height: 240px;
+  background: url('assets/speech_bubble.png') no-repeat center;
+  background-size: 100% 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 25px 100px 60px 125px; /* Increased horizontal padding */
+  animation: bubblePop 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+.tutorial-text {
+  font-size: 17px;
+  color: #002244;
+  font-weight: 700;
+  line-height: 1.5;
+  margin: 0;
+  text-align: center;
+  white-space: pre-line;
+  max-width: 100%;
+}
+
+.tutorial-bottom-bar {
+  display: flex;
+  gap: 20px;
+  pointer-events: all;
+  margin-bottom: 40px;
+}
+
+@keyframes bubblePop {
+  from { opacity: 0; transform: translateY(-40px) scale(0.8); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
