@@ -100,7 +100,7 @@ export default class GameScene extends Phaser.Scene {
     if (this._gameOver) return;
 
     const pointer = this.input.activePointer;
-    this._shark.update(pointer);
+    this._shark.update(pointer, _delta);
 
     // Scroll ground
     const scrollSpeed = GROUND_SPEED * (_delta / 1000) * 2;

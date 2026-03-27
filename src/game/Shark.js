@@ -1,40 +1,39 @@
 /**
  * Shark.js
- * Single-texture (baby_shark.png) shark that grows from scale 0.22 → 0.75 max.
- * Physics circle is positioned to cover the whole face.
+ * Animated shark that cycles through 24 sprite frames (baby shark animation).
+ * No shadow. Grows from scale 0.22 → 0.75 over 9 correct bites.
  */
+
+const TOTAL_FRAMES = 24;
+const FRAME_DURATION_MS = 60; // ~16 fps animation
 
 export default class Shark {
   // Scale range: starts tiny, grows to 0.75 at score=9
-  static MIN_SCALE = 0.22;
-  static MAX_SCALE = 0.75;
+  static MIN_SCALE = 0.40;
+  static MAX_SCALE = 1.1;
 
   constructor(scene) {
     this.scene = scene;
     this.score = 0;
     this.shaking = false;
-    this._targetScale = Shark.MIN_SCALE; // Used for smooth lerp on growth
+    this._targetScale = Shark.MIN_SCALE;
+
+    // Frame animation state
+    this._frameIndex = 0;     // current frame (0-based)
+    this._frameElapsed = 0;   // ms elapsed since last frame switch
 
     const cx = scene.scale.width  * 0.20;
     const cy = scene.scale.height * 0.50;
 
-    // ── Sprite ───────────────────────────────────────────────────
-    this.sprite = scene.physics.add.sprite(cx, cy, 'baby_shark');
+    // ── Sprite – starts on frame 001 ─────────────────────────────
+    this.sprite = scene.physics.add.sprite(cx, cy, 'shark_frame_001');
     this.sprite.setScale(Shark.MIN_SCALE);
     this.sprite.setDepth(20);
     this.sprite.body.setAllowGravity(false);
 
     // ── Physics Circle for Face/Mouth ─────────────────────────────
-    // Large radius to cover the face area (per user request)
-    this._baseRadius = 150; 
+    this._baseRadius = 150;
     this._setBodyCircle();
-
-    // ── Shadow ───────────────────────────────────────────────────
-    this.shadow = scene.add.image(cx, cy, 'baby_shark');
-    this.shadow.setTint(0x000000);
-    this.shadow.setAlpha(0.25);
-    this.shadow.setDepth(19);
-    this.shadow.setScale(Shark.MIN_SCALE);
 
     // ── Bubble particles ─────────────────────────────────────────
     this.particles = scene.add.particles(0, 0, 'bubble', {
@@ -51,7 +50,7 @@ export default class Shark {
     this.particles.setDepth(18);
   }
 
-  update(pointer) {
+  update(pointer, delta) {
     if (!this.sprite.active) return;
 
     // ── Mouse follow (lerp) ──────────────────────────────────────
@@ -64,19 +63,23 @@ export default class Shark {
     const currentScale = this.sprite.scaleX;
     const smoothed = currentScale + (this._targetScale - currentScale) * 0.12;
     this.sprite.setScale(smoothed);
-    this.shadow.setScale(smoothed);
 
-    // ── Shadow slightly behind and below ────────────────────────
-    this.shadow.x = this.sprite.x - 14;
-    this.shadow.y = this.sprite.y + 12;
+    // ── Frame animation ──────────────────────────────────────────
+    const dt = delta ?? 16; // fallback 16ms if delta not provided
+    this._frameElapsed += dt;
+    if (this._frameElapsed >= FRAME_DURATION_MS) {
+      this._frameElapsed -= FRAME_DURATION_MS;
+      this._frameIndex = (this._frameIndex + 1) % TOTAL_FRAMES;
+      const pad = String(this._frameIndex + 1).padStart(3, '0');
+      this.sprite.setTexture(`shark_frame_${pad}`);
+    }
 
-    // ── Recompute body circle each frame (face-pinned and scaled) ──────────
+    // ── Recompute body circle each frame ──────────────────────────
     this._setBodyCircle();
   }
 
   eatCorrect() {
     this.score++;
-    // Compute new _targetScale so lerp in update() smoothly grows toward it
     const progress = Math.min(this.score / 9, 1.0);
     this._targetScale = Shark.MIN_SCALE + (Shark.MAX_SCALE - Shark.MIN_SCALE) * progress;
     this._growPulse();
@@ -85,11 +88,10 @@ export default class Shark {
   eatWrong() {
     if (this._isTingingRed) return;
     this._isTingingRed = true;
-    
-    // Tint red for 1 second
+
     this.sprite.setTint(0xff0000);
     this._shake();
-    
+
     this.scene.time.delayedCall(1000, () => {
       this.sprite.clearTint();
       this._isTingingRed = false;
@@ -100,11 +102,10 @@ export default class Shark {
   _setBodyCircle() {
     const rawW = this.sprite.texture.getSourceImage().width;
     const rawH = this.sprite.texture.getSourceImage().height;
-    
-    // Position center at 68% of width (face region)
+
     const offX = rawW * 0.68 - this._baseRadius;
     const offY = rawH * 0.50 - this._baseRadius;
-    
+
     this.sprite.body.setCircle(this._baseRadius, offX, offY);
   }
 
@@ -112,15 +113,12 @@ export default class Shark {
   _growPulse() {
     const s = this._targetScale;
     this.scene.tweens.add({
-      targets: [this.sprite, this.shadow],
+      targets: this.sprite,
       scaleX: s * 1.1,
       scaleY: s * 1.1,
       duration: 150,
       yoyo: true,
       ease: 'Sine.easeOut',
-      onComplete: () => {
-        // Smooth lerp in update() handles the final settle
-      },
     });
   }
 
@@ -129,7 +127,7 @@ export default class Shark {
     this.shaking = true;
     const ox = this.sprite.x;
     this.scene.tweens.add({
-      targets: [this.sprite, this.shadow],
+      targets: this.sprite,
       x: ox + 10,
       duration: 50,
       yoyo: true,
@@ -147,7 +145,6 @@ export default class Shark {
 
   destroy() {
     this.particles?.destroy();
-    this.shadow?.destroy();
     this.sprite?.destroy();
   }
 }

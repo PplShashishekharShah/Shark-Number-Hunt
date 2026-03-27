@@ -50,7 +50,7 @@ export default class Fish {
       fontSize,
       fontFamily: '"Segoe UI", sans-serif',
       fontStyle: 'bold',
-      color: correct ? '#00ff88' : '#ff4455',
+      color: '#000000',
       stroke: '#001133',
       strokeThickness: 3,
     }).setOrigin(0.5).setDepth(17);

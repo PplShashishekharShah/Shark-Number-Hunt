@@ -46,6 +46,15 @@ export default class LoadingScene extends Phaser.Scene {
     this.load.audio('win_sound',         '/assets/level_complete.wav');
     this.load.audio('bg_music',          '/assets/background_water_music.wav');
 
+    // Load all 24 baby shark animation frames
+    for (let i = 1; i <= 24; i++) {
+      const pad = String(i).padStart(3, '0');
+      this.load.image(
+        `shark_frame_${pad}`,
+        `/assets/shark_frames/grok-video-0ad2ca84-b7d6-4005-b237-32c43046810f_${pad} - Edited.png`
+      );
+    }
+
     // ── Title text ──────────────────────────────────────────────────
     this.add.text(W / 2, H * 0.12, '🦈 SHARK NUMBER HUNT', {
       fontSize: Math.round(W * 0.048) + 'px',

@@ -72,15 +72,16 @@ export default class TutorialScene extends Phaser.Scene {
     this._hand.x = this._shark.sprite.x + 32;
     this._hand.y = this._shark.sprite.y + 22;
 
-    // Sync shadow
-    if (this._shark.shadow) {
-      this._shark.shadow.x = this._shark.sprite.x - 14;
-      this._shark.shadow.y = this._shark.sprite.y + 12;
-      this._shark.shadow.setScale(this._shark.sprite.scaleX);
-    }
+    // Advance shark frame animation (use shark's own position as "pointer" so no lerp drift)
+    const sx = this._shark.sprite.x;
+    const sy = this._shark.sprite.y;
+    this._shark.update({ x: sx, y: sy }, delta);
+    // Restore exact position since shark.update() lerps toward pointer — we don't want drift
+    this._shark.sprite.setPosition(sx, sy);
   }
 
   // ── STEP 1: Greeting — shark moves around ─────────────────────────
+
   _runStep1() {
     this._step = 1;
     this._emitStep("I'm your Number Shark!\nMove me with your mouse to hunt Numbers");
