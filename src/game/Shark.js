@@ -45,10 +45,6 @@ export default class Shark {
     });
     this.particles.setDepth(18);
 
-    // ── Debug Circle for Catching Arc ─────────────────────────────
-    this.debugGraphics = scene.add.graphics();
-    this.debugGraphics.setDepth(21); // Above the shark
-
     // ── Physics Circle for Face/Mouth ─────────────────────────────
     this._setBodyCircle();
   }
@@ -117,15 +113,6 @@ export default class Shark {
     const offY = rawH * 0.55 - faceRadius;
 
     this.sprite.body.setCircle(faceRadius, offX, offY);
-
-    // ── Draw Debug Circle ───────────────────────────────────────
-    this.debugGraphics.clear();
-    this.debugGraphics.lineStyle(2, 0x00ff00, 0.8);
-    this.debugGraphics.strokeCircle(
-      this.sprite.body.center.x,
-      this.sprite.body.center.y,
-      faceRadius * this.sprite.scaleX
-    );
   }
 
   /** Smoother pop animation on eat */
