@@ -49,7 +49,7 @@ export default class Fish {
     this.label = scene.add.text(spawnX, spawnY - 55, String(value), {
       fontSize,
       fontFamily: '"Segoe UI", sans-serif',
-      fontStyle: 'bold',
+      // fontStyle: '',
       color: '#000000',
       stroke: '#001133',
       strokeThickness: 3,
@@ -84,20 +84,29 @@ export default class Fish {
     return this.sprite.x < -100;
   }
 
-  /** Play bubble-burst effect at current position, then destroy */
+  /** Play a "fish dies/eaten" effect: spin, shrink, fade, and turn gray */
   eatEffect() {
-    const { x, y } = this.sprite;
-    const emitter = this.scene.add.particles(x, y, 'bubble', {
-      lifespan: 500,
-      speed:    { min: 60, max: 140 },
-      scale:    { start: 0.35, end: 0 },
-      alpha:    { start: 0.9, end: 0 },
-      quantity: 14,
-      angle:    { min: 0, max: 360 },
+    this.active = false;
+    
+    // Stop movement
+    this.sprite.body.setVelocity(0, 0);
+    
+    // Turn gray-ish to show "lifeless"
+    this.sprite.setTint(0x666666);
+    this.label.setAlpha(0); // Hide number immediately
+    this.bubble.setAlpha(0);
+    this.shadow.setAlpha(0);
+
+    this.scene.tweens.add({
+      targets: this.sprite,
+      scaleX: 0,
+      scaleY: 0,
+      rotation: Phaser.Math.DegToRad(360),
+      alpha: 0,
+      duration: 400,
+      ease: 'Back.easeIn',
+      onComplete: () => this.destroy()
     });
-    emitter.setDepth(12);
-    this.scene.time.delayedCall(520, () => emitter.destroy());
-    this.destroy();
   }
 
   destroy() {

@@ -10,7 +10,7 @@ const FRAME_DURATION_MS = 60; // ~16 fps animation
 export default class Shark {
   // Scale range: starts tiny, grows to 0.75 at score=9
   static MIN_SCALE = 0.40;
-  static MAX_SCALE = 1.1;
+  static MAX_SCALE = 1;
 
   constructor(scene) {
     this.scene = scene;
@@ -136,6 +136,37 @@ export default class Shark {
         this.sprite.x = ox;
         this.shaking = false;
       },
+    });
+  }
+
+  /**
+   * Play a blue "wind/water" swirl effect when eating a fish.
+   * Spawns at fish position and sucks into the shark mouth.
+   */
+  playEatingEffect(targetX, targetY) {
+    // Determine mouth position (approx 68% of width, 50% height)
+    const worldW = this.sprite.displayWidth;
+    const worldH = this.sprite.displayHeight;
+    const mouthX = this.sprite.x + (worldW * 0.18); // offset from center (0.68 - 0.5 = 0.18)
+    const mouthY = this.sprite.y;
+
+    const swirl = this.scene.add.image(targetX, mouthY, 'wind_stroke'); // Spawn at mouth's height
+    swirl.setTintFill(0x00aaff);
+    swirl.setBlendMode(Phaser.BlendModes.ADD);
+    swirl.setScale(0.1);
+    swirl.setAlpha(0.8);
+    swirl.setDepth(25);
+
+    this.scene.tweens.add({
+      targets: swirl,
+      x: mouthX,
+      // No y tween = horizontal only
+      scale: 0.5,
+      // No rotation = donot spin
+      alpha: 0,
+      duration: 500,
+      ease: 'Quad.easeIn',
+      onComplete: () => swirl.destroy()
     });
   }
 

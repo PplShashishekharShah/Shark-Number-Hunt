@@ -41,6 +41,7 @@ export default class LoadingScene extends Phaser.Scene {
     this.load.image('fully_grown_shark', '/assets/fully_grown_shark.png');
     this.load.image('small_fish',        '/assets/small_fish.png');
     this.load.image('bubble',            '/assets/bubble.png');
+    this.load.image('wind_stroke',       '/assets/wind_stroke.png');
     this.load.audio('eat_sound',         '/assets/eat.wav');
     this.load.audio('wrong_sound',       '/assets/wrong.wav');
     this.load.audio('win_sound',         '/assets/level_complete.wav');

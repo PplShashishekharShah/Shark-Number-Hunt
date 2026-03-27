@@ -125,6 +125,7 @@ export default class GameScene extends Phaser.Scene {
       if (this.physics.overlap(this._shark.sprite, fish.sprite)) {
         if (fish.correct) {
           this._shark.eatCorrect();
+          this._shark.playEatingEffect(fish.sprite.x, fish.sprite.y);
           this._score++;
           this._emitState();
           fish.eatEffect();
@@ -208,7 +209,7 @@ export default class GameScene extends Phaser.Scene {
       this._fishPool = this._shufflePool(this._fishPool);
     }
 
-    const speed = Phaser.Math.Between(150, 230);
+    const speed = Phaser.Math.Between(120, 200);
     const fish  = new Fish(this, data.value, data.correct, spawnY, speed);
     this._fishes.push(fish);
   }

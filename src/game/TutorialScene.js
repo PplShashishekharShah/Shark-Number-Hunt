@@ -100,7 +100,7 @@ export default class TutorialScene extends Phaser.Scene {
   // ── STEP 2: Eat correct fish ──────────────────────────────────────
   _runStep2() {
     this._step = 2;
-    this._emitStep("Eat the RIGHT number! 🟢\nI eat it and grow BIGGER!");
+    this._emitStep("Eat the RIGHT number!\nI eat it and grow BIGGER!");
 
     const H = this._H;
     const correctFish = new Fish(this, 7, true, H * 0.45, 0);
@@ -112,6 +112,7 @@ export default class TutorialScene extends Phaser.Scene {
         // Eat it
         if (correctFish.active) {
           this._shark.eatCorrect();
+          this._shark.playEatingEffect(correctFish.sprite.x, correctFish.sprite.y);
           correctFish.eatEffect();
           this.sound.play('eat_sound', { volume: 0.5 });
           this.cameras.main.shake(120, 0.007);
@@ -127,7 +128,7 @@ export default class TutorialScene extends Phaser.Scene {
   // ── STEP 3: Touch wrong fish ──────────────────────────────────────
   _runStep3() {
     this._step = 3;
-    this._emitStep("Avoid WRONG numbers! 🔴\nI turn RED and get dizzy — bad!");
+    this._emitStep("Avoid WRONG numbers!\nI turn RED and get dizzy — bad!");
 
     const H = this._H;
     const wrongFish = new Fish(this, 4, false, H * 0.52, 0);
