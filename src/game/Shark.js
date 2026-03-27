@@ -31,10 +31,6 @@ export default class Shark {
     this.sprite.setDepth(20);
     this.sprite.body.setAllowGravity(false);
 
-    // ── Physics Circle for Face/Mouth ─────────────────────────────
-    this._baseRadius = 150;
-    this._setBodyCircle();
-
     // ── Bubble particles ─────────────────────────────────────────
     this.particles = scene.add.particles(0, 0, 'bubble', {
       follow: this.sprite,
@@ -48,6 +44,13 @@ export default class Shark {
       angle: { min: 170, max: 190 },
     });
     this.particles.setDepth(18);
+
+    // ── Debug Circle for Catching Arc ─────────────────────────────
+    this.debugGraphics = scene.add.graphics();
+    this.debugGraphics.setDepth(21); // Above the shark
+
+    // ── Physics Circle for Face/Mouth ─────────────────────────────
+    this._setBodyCircle();
   }
 
   update(pointer, delta) {
@@ -100,13 +103,29 @@ export default class Shark {
 
   /** Place physics circle to cover the whole face (~68% depth, vertically centered) */
   _setBodyCircle() {
+    // Current texture source image dimensions
     const rawW = this.sprite.texture.getSourceImage().width;
     const rawH = this.sprite.texture.getSourceImage().height;
 
-    const offX = rawW * 0.68 - this._baseRadius;
-    const offY = rawH * 0.50 - this._baseRadius;
+    // Use a radius that feels like "just the mouth/face"
+    // Reducing from 150 to 120 for tighter face-only catch area
+    const faceRadius = 100; 
+    
+    // Position center at 65-68% of width (mouth region)
+    // Offset is into the unscaled texture
+    const offX = rawW * 0.75 - faceRadius;
+    const offY = rawH * 0.55 - faceRadius;
 
-    this.sprite.body.setCircle(this._baseRadius, offX, offY);
+    this.sprite.body.setCircle(faceRadius, offX, offY);
+
+    // ── Draw Debug Circle ───────────────────────────────────────
+    this.debugGraphics.clear();
+    this.debugGraphics.lineStyle(2, 0x00ff00, 0.8);
+    this.debugGraphics.strokeCircle(
+      this.sprite.body.center.x,
+      this.sprite.body.center.y,
+      faceRadius * this.sprite.scaleX
+    );
   }
 
   /** Smoother pop animation on eat */
