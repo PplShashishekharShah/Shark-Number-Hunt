@@ -10,7 +10,7 @@ const FRAME_DURATION_MS = 60; // ~16 fps animation
 export default class Shark {
   // Scale range: starts tiny, grows to 0.75 at score=9
   static MIN_SCALE = 0.40;
-  static MAX_SCALE = 1;
+  static MAX_SCALE = 1.12;
 
   constructor(scene) {
     this.scene = scene;
